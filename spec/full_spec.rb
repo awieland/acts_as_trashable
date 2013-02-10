@@ -81,7 +81,7 @@ describe "ActsAsTrashable Full Test" do
           t.column :type_name, :string
         end unless table_exists?
         
-        set_inheritance_column :type_name
+        self.inheritance_column = :type_name
         acts_as_trashable
       end
       

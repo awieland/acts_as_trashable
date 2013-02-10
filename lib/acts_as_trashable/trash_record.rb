@@ -3,7 +3,7 @@ require 'zlib'
 module ActsAsTrashable
   class TrashRecord < ActiveRecord::Base
 
-    set_table_name "trash_records"
+    self.table_name = "trash_records"
   
     class << self
       # Find a trash entry by class and id.
