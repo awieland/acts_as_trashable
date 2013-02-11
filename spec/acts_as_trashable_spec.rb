@@ -22,6 +22,16 @@ describe ActsAsTrashable do
     
     acts_as_trashable
   end
+
+  class TestTrashableModelWithAssociation < TestTrashableModel
+    def association
+      @association ||= TestTrashableModel.new
+    end
+
+    def really_destroy
+      association.destroy
+    end
+  end
   
   it "should be able to inject trashable behavior onto ActiveRecord::Base" do
     ActiveRecord::Base.included_modules.should include(ActsAsTrashable)
@@ -47,6 +57,16 @@ describe ActsAsTrashable do
     end
   end
   
+  it "should not create trash entries for destroyed associations" do
+    record = TestTrashableModelWithAssociation.new
+    association = record.association
+    trash = mock(:trash)
+    ActsAsTrashable::TrashRecord.should_receive(:new).with(record).and_return(trash)
+    ActsAsTrashable::TrashRecord.should_not_receive(:new).with(association)
+    trash.should_receive(:save!)
+    record.destroy
+  end
+
   it "should be able to empty the trash based on age" do
     ActsAsTrashable::TrashRecord.should_receive(:empty_trash).with(1.day, :only => TestTrashableModel)
     TestTrashableModel.empty_trash(1.day)

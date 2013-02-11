@@ -1,3 +1,7 @@
+# ADW modified: Added methods to disable trash collection *globally* instead of per instance.
+# Modified #destroy_with_trash to use this method to prevent the creation of redundant trash records
+# (when a record and its children are both acts_as_trashable).
+
 require 'active_record'
 require 'active_support/all'
 
@@ -35,15 +39,31 @@ module ActsAsTrashable
       trash = TrashRecord.find_trash(self, id)
       return trash.restore! if trash
     end
+
+    def acts_as_trashable_disabled
+      @@acts_as_trashable_disabled ||= false
+    end
+  
+    def disable_trash
+      save_val = @@acts_as_trashable_disabled
+      begin
+        @@acts_as_trashable_disabled = true
+        yield if block_given?
+      ensure
+        @@acts_as_trashable_disabled = save_val
+      end          
+    end
   end
   
   module InstanceMethods
     def destroy_with_trash
-      return destroy_without_trash if @acts_as_trashable_disabled
+      return destroy_without_trash if @acts_as_trashable_disabled || self.class.acts_as_trashable_disabled 
       TrashRecord.transaction do
         trash = TrashRecord.new(self)
         trash.save!
-        return destroy_without_trash
+	self.class.disable_trash do
+          return destroy_without_trash
+	end
       end
     end
     
