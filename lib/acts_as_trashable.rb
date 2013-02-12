@@ -82,3 +82,5 @@ module ActsAsTrashable
 end
 
 ActiveRecord::Base.send(:include, ActsAsTrashable)
+
+require_relative 'acts_as_trashable/railtie' if defined?(Rails)
